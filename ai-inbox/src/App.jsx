@@ -195,9 +195,9 @@ export default function App() {
             selectedId={selectedConversationId}
             onSelect={handleSelectConversation}
             onToggleStar={handleToggleStar}
-            onArchive={handleArchive}
-            onDelete={handleDelete}
-            onRestore={handleRestore}
+            onArchive={activeInbox === 'all' ? handleArchive : undefined}
+            onDelete={activeInbox === 'all' ? handleDelete : undefined}
+            onRestore={activeInbox !== 'all' ? handleRestore : undefined}
             activeInbox={activeInbox}
           />
         </Box>

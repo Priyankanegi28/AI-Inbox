@@ -1,4 +1,3 @@
-// InboxList.jsx
 import { Box, Typography } from '@mui/material';
 import InboxItem from './InboxItem';
 
@@ -9,12 +8,11 @@ export default function InboxList({
   onToggleStar,
   onArchive,
   onDelete,
-  activeInbox,
-  setActiveInbox
+  onRestore,
+  activeInbox
 }) {
   return (
     <Box sx={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
-      {/* Add the "Your Inbox" heading */}
       <Box sx={{ 
         p: 2,
         position: 'sticky',
@@ -25,14 +23,14 @@ export default function InboxList({
         borderColor: 'divider'
       }}>
         <Typography variant="h6" fontWeight="bold">
-          Your Inbox
+          {activeInbox === 'all' ? 'Your Inbox' : 
+           activeInbox === 'archived' ? 'Archived' : 'Deleted'}
         </Typography>
         <Typography variant="caption" color="text.secondary">
           {conversations.length} {conversations.length === 1 ? 'conversation' : 'conversations'}
         </Typography>
       </Box>
 
-      {/* Conversation list */}
       {conversations.map((conversation) => (
         <InboxItem
           key={conversation.id}
@@ -42,8 +40,8 @@ export default function InboxList({
           onToggleStar={onToggleStar}
           onArchive={onArchive}
           onDelete={onDelete}
+          onRestore={onRestore}
           activeInbox={activeInbox}
-          setActiveInbox={setActiveInbox}
         />
       ))}
     </Box>

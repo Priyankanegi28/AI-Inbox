@@ -1,5 +1,5 @@
-// InboxItem.jsx
-import {
+ // InboxItem.jsx
+ import {
   Archive,
   Delete,
   LabelImportantOutlined, Restore, Star,
