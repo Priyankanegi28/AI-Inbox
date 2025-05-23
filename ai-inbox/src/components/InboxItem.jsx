@@ -15,13 +15,27 @@ import {
   Typography
 } from '@mui/material';
 import { differenceInMinutes } from 'date-fns';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 const priorityColors = {
   high: 'error',
   medium: 'warning',
   low: 'success'
+};
+
+// Helper function to generate a color from a string
+const stringToColor = (string) => {
+  let hash = 0;
+  for (let i = 0; i < string.length; i++) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  return color;
 };
 
 export default function InboxItem({ 
@@ -38,6 +52,11 @@ export default function InboxItem({
   const [hovered, setHovered] = useState(false);
   const lastMessage = conversation.messages[conversation.messages.length - 1];
   
+  // Generate a consistent color for each conversation
+  const avatarColor = useMemo(() => {
+    return stringToColor(conversation.name || conversation.id);
+  }, [conversation.name, conversation.id]);
+
   const handleActionClick = (e, handler) => {
     e.stopPropagation();
     if (handler) handler(conversation.id);
@@ -91,10 +110,11 @@ export default function InboxItem({
       }}>
         <Avatar 
           sx={{ 
-            bgcolor: 'primary.main', 
+            bgcolor: avatarColor, 
             width: 32, 
             height: 32,
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
+            color: '#fff' // Ensure text is readable on the background
           }}
         >
           {conversation.name.charAt(0).toUpperCase()}
