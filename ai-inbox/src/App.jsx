@@ -24,6 +24,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [activeInbox, setActiveInbox] = useState('all');
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [copilotQuery, setCopilotQuery] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -132,6 +133,10 @@ export default function App() {
           : conv
       )
     );
+  };
+
+  const handleAskFinCopilot = (selectedText) => {
+    setCopilotQuery(selectedText);
   };
 
   const sortedConversations = useMemo(() => {
@@ -255,6 +260,7 @@ export default function App() {
               onBack={() => setSelectedConversationId(null)}
               onSendMessage={handleSendMessage}
               isMobile={isMobile}
+              onAskFinCopilot={handleAskFinCopilot}
             />
           </Box>
         )}
@@ -264,7 +270,10 @@ export default function App() {
             width: isMobile ? '100%' : 360,
             display: isMobile && selectedConversationId ? 'none' : 'block'
           }}>
-            <AICopilot conversationId={selectedConversationId} />
+            <AICopilot 
+              conversationId={selectedConversationId}
+              initialQuery={copilotQuery}
+            />
           </Box>
         )}
       </Box>

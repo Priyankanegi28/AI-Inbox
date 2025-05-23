@@ -55,7 +55,6 @@ export default function ConversationView({
 
   const avatarColor = conversation ? stringToColor(conversation.name) : 'primary.main';
 
-  // Handle text selection
   useEffect(() => {
     const handleSelectionChange = () => {
       const selection = window.getSelection();
@@ -84,7 +83,7 @@ export default function ConversationView({
     if (selectedText && onAskFinCopilot) {
       onAskFinCopilot(selectedText);
       setShowCopilotButton(false);
-      window.getSelection().empty(); // Clear selection
+      window.getSelection().empty();
     }
   };
 
@@ -165,7 +164,6 @@ export default function ConversationView({
         position: 'relative'
       }}
     >
-      {/* Floating Ask Fin Copilot Button */}
       {showCopilotButton && (
         <Button
           variant="contained"

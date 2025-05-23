@@ -1,5 +1,6 @@
 import {
-  Help, History, Lightbulb, Psychology, Send, SentimentDissatisfied, SentimentSatisfied, SentimentVeryDissatisfied, SentimentVerySatisfied, SmartToy
+  Help, History, Lightbulb, Psychology, Send, SentimentDissatisfied,
+  SentimentSatisfied, SentimentVeryDissatisfied, SentimentVerySatisfied, SmartToy
 } from '@mui/icons-material';
 import {
   Avatar, Badge, Box, Button, Chip, Divider, IconButton, LinearProgress, List,
@@ -18,7 +19,7 @@ const sentimentIcons = {
   mixed: <SentimentDissatisfied color="warning" />
 };
 
-export default function AICopilot({ conversationId }) {
+export default function AICopilot({ conversationId, initialQuery }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -28,9 +29,14 @@ export default function AICopilot({ conversationId }) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
+    if (initialQuery) {
+      setInput(initialQuery);
+    }
+  }, [initialQuery]);
+
+  useEffect(() => {
     if (conversationId) {
       setIsLoading(true);
-      // Simulate loading suggestions
       setTimeout(() => {
         setSuggestions(aiSuggestions[conversationId] || []);
         setMessages([{
@@ -68,7 +74,6 @@ export default function AICopilot({ conversationId }) {
     setInput('');
     setIsLoading(true);
     
-    // Simulate AI response
     setTimeout(() => {
       const aiResponse = generateAIResponse(input);
       setMessages(prev => [...prev, aiResponse]);
@@ -77,7 +82,6 @@ export default function AICopilot({ conversationId }) {
   };
 
   const generateAIResponse = (query) => {
-    // Simulate sentiment analysis
     const sentimentScore = Math.random();
     let newSentiment = 'neutral';
     if (sentimentScore > 0.7) newSentiment = 'positive';
@@ -85,7 +89,6 @@ export default function AICopilot({ conversationId }) {
     
     setSentiment(newSentiment);
 
-    // Generate different response types
     const responseTypes = [
       {
         text: `Based on our policy, here's how you can respond:\n\n"Thank you for reaching out about your return. I can confirm that unopened items can be returned within 60 days for a full refund. Would you like me to process this for you?"`,
