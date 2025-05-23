@@ -20,3 +20,32 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+.MuiButton-root {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+.MuiButton-contained {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+/* Force button colors in dark mode */
+[data-mui-color-scheme="dark"] .MuiButton-outlined:not(.InboxSelectorButton) {
+  color: white !important;
+  border-color: white !important;
+}
+
+[data-mui-color-scheme="dark"] .MuiButton-contained:not(.InboxSelectorButton) {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Force button colors in light mode */
+[data-mui-color-scheme="light"] .MuiButton-outlined:not(.InboxSelectorButton) {
+  color: black !important;
+  border-color: black !important;
+}
+
+[data-mui-color-scheme="light"] .MuiButton-contained:not(.InboxSelectorButton) {
+  background-color: black !important;
+  color: white !important;
+}

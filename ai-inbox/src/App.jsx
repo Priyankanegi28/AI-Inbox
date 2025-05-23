@@ -1,4 +1,4 @@
-import { Brightness4, Brightness7 } from '@mui/icons-material';
+import { Brightness4, Brightness7, ViewList, ViewModule } from '@mui/icons-material';
 import {
   Box, Button, ButtonGroup, createTheme, CssBaseline, IconButton,
   ThemeProvider, Tooltip, useMediaQuery, useTheme
@@ -23,6 +23,7 @@ export default function App() {
   );
   const [darkMode, setDarkMode] = useState(false);
   const [activeInbox, setActiveInbox] = useState('all');
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -153,7 +154,8 @@ export default function App() {
           width: isMobile ? '100%' : 360,
           display: isMobile && selectedConversationId ? 'none' : 'block',
           borderRight: '1px solid',
-          borderColor: 'divider'
+          borderColor: 'divider',
+          position: 'relative'
         }}>
           <Box sx={{ 
             display: 'flex', 
@@ -199,7 +201,48 @@ export default function App() {
             onDelete={activeInbox === 'all' ? handleDelete : undefined}
             onRestore={activeInbox !== 'all' ? handleRestore : undefined}
             activeInbox={activeInbox}
+            viewMode={viewMode}
           />
+
+          {/* View Toggle Buttons - Bottom Left Corner */}
+          <Box sx={{
+            position: 'absolute',
+            bottom: 16,
+            left: 16,
+            zIndex: 1,
+            bgcolor: 'common.white',
+            borderRadius: 1,
+            boxShadow: 2
+          }}>
+            <ButtonGroup variant="text" color="inherit">
+              <Tooltip title="List view">
+                <IconButton 
+                  onClick={() => setViewMode('list')}
+                  sx={{ 
+                    color: viewMode === 'list' ? 'common.black' : 'grey.500',
+                    '&:hover': {
+                      bgcolor: 'grey.300'
+                    }
+                  }}
+                >
+                  <ViewList />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Grid view">
+                <IconButton 
+                  onClick={() => setViewMode('grid')}
+                  sx={{ 
+                    color: viewMode === 'grid' ? 'common.black' : 'grey.500',
+                    '&:hover': {
+                      bgcolor: 'grey.300'
+                    }
+                  }}
+                >
+                  <ViewModule />
+                </IconButton>
+              </Tooltip>
+            </ButtonGroup>
+          </Box>
         </Box>
 
         {(!isMobile || selectedConversationId) && (

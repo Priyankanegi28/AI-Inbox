@@ -1,15 +1,20 @@
- // InboxItem.jsx
- import {
+import {
   Archive,
   Delete,
-  LabelImportantOutlined, Restore, Star,
-  StarBorder
+  LabelImportantOutlined,
+  Restore
 } from '@mui/icons-material';
 import {
-  Badge, Box, Chip, IconButton,
-  Stack, Tooltip, Typography
+  Avatar,
+  Badge,
+  Box,
+  Chip,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography
 } from '@mui/material';
-import { formatDistanceToNow } from 'date-fns';
+import { differenceInMinutes } from 'date-fns';
 import { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
@@ -23,70 +28,77 @@ export default function InboxItem({
   conversation, 
   isSelected, 
   onClick,
-  onToggleStar,
   onArchive,
   onDelete,
   onRestore,
   activeInbox,
-  setActiveInbox
+  viewMode = 'list'
 }) {
   const [ref, inView] = useInView({ triggerOnce: true });
   const [hovered, setHovered] = useState(false);
   const lastMessage = conversation.messages[conversation.messages.length - 1];
   
-  const handleArchiveClick = (e, id) => {
+  const handleActionClick = (e, handler) => {
     e.stopPropagation();
-    onArchive(id);
-    setActiveInbox('archived');
+    if (handler) handler(conversation.id);
   };
 
-  const handleDeleteClick = (e, id) => {
-    e.stopPropagation();
-    onDelete(id);
-    setActiveInbox('deleted');
-  };
-
-  const handleRestoreClick = (e, id) => {
-    e.stopPropagation();
-    onRestore(id);
-    setActiveInbox('all');
-  };
+  // Calculate time since last message
+  const minutesAgo = differenceInMinutes(new Date(), new Date(lastMessage.timestamp));
+  let timeDisplay;
+  
+  if (minutesAgo < 1) {
+    timeDisplay = 'Just now';
+  } else if (minutesAgo < 60) {
+    timeDisplay = `${minutesAgo}m `;
+  } else {
+    const hoursAgo = Math.floor(minutesAgo / 60);
+    timeDisplay = `${hoursAgo}h `;
+  }
 
   return (
     <Box
       ref={ref}
       sx={{
         display: 'flex',
-        alignItems: 'center',
-        p: 2,
-        borderBottom: '1px solid',
-        borderColor: 'divider',
+        flexDirection: viewMode === 'grid' ? 'column' : 'row',
+        alignItems: viewMode === 'grid' ? 'flex-start' : 'center',
+        p: viewMode === 'grid' ? 2 : 1.5,
+        borderBottom: 'none',
         backgroundColor: isSelected ? 'action.selected' : 'background.paper',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        borderRadius: viewMode === 'grid' ? 1 : 0,
         '&:hover': {
           backgroundColor: 'action.hover',
-          boxShadow: 1
-        }
+          boxShadow: viewMode === 'grid' ? 2 : 'none'
+        },
+        ...(viewMode === 'grid' && {
+          height: '100%',
+          border: '1px solid',
+          borderColor: 'divider'
+        })
       }}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-        <IconButton 
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleStar(conversation.id);
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mr: viewMode === 'list' ? 1 : 0,
+        mb: viewMode === 'grid' ? 1 : 0
+      }}>
+        <Avatar 
+          sx={{ 
+            bgcolor: 'primary.main', 
+            width: 32, 
+            height: 32,
+            fontSize: '0.875rem'
           }}
         >
-          {conversation.starred ? (
-            <Star color="warning" fontSize="small" />
-          ) : (
-            <StarBorder fontSize="small" />
-          )}
-        </IconButton>
+          {conversation.name.charAt(0).toUpperCase()}
+        </Avatar>
       </Box>
 
       <Box sx={{ 
@@ -97,7 +109,7 @@ export default function InboxItem({
       }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography 
-            variant="subtitle2" 
+            variant={viewMode === 'grid' ? 'subtitle1' : 'subtitle2'}
             noWrap
             fontWeight={!conversation.read ? 'bold' : 'normal'}
             color={!conversation.read ? 'text.primary' : 'text.secondary'}
@@ -111,18 +123,30 @@ export default function InboxItem({
               />
             )}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {formatDistanceToNow(lastMessage.timestamp, { addSuffix: true })}
-          </Typography>
+          {viewMode === 'list' && (
+            <Typography variant="caption" color="text.secondary">
+              {timeDisplay}
+            </Typography>
+          )}
         </Box>
 
         <Typography 
           variant="body2" 
-          noWrap
+          noWrap={viewMode === 'list'}
           color={!conversation.read ? 'text.primary' : 'text.secondary'}
+          sx={{ 
+            mt: viewMode === 'grid' ? 0.5 : 0,
+            mb: viewMode === 'grid' ? 1 : 0
+          }}
         >
           {conversation.preview}
         </Typography>
+
+        {viewMode === 'grid' && (
+          <Typography variant="caption" color="text.secondary">
+            {timeDisplay}
+          </Typography>
+        )}
 
         <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
           {conversation.labels?.map(label => (
@@ -144,43 +168,42 @@ export default function InboxItem({
         opacity: hovered || isSelected ? 1 : 0.7,
         transition: 'opacity 0.2s ease'
       }}>
-        <Box display="flex" alignItems="center">
-          {conversation.unread && (
-            <Badge 
-              badgeContent=" " 
-              color="primary"
-              variant="dot"
-              sx={{ mr: 1 }}
-            />
-          )}
-          <Chip 
-            label={conversation.status} 
-            size="small"
-            variant="outlined"
+        {conversation.unread && (
+          <Badge 
+            badgeContent=" " 
+            color="primary"
+            variant="dot"
+            sx={{ mr: 1 }}
           />
-        </Box>
+        )}
 
         {(hovered || isSelected) && (
           <Box sx={{ mt: 1, display: 'flex' }}>
             {activeInbox === 'all' ? (
               <>
-                <Tooltip title="Archive">
-                  <IconButton size="small" onClick={(e) => handleArchiveClick(e, conversation.id)}>
-                    <Archive fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Delete">
-                  <IconButton size="small" onClick={(e) => handleDeleteClick(e, conversation.id)}>
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                {onArchive && (
+                  <Tooltip title="Archive">
+                    <IconButton size="small" onClick={(e) => handleActionClick(e, onArchive)}>
+                      <Archive fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onDelete && (
+                  <Tooltip title="Delete">
+                    <IconButton size="small" onClick={(e) => handleActionClick(e, onDelete)}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </>
             ) : (
-              <Tooltip title="Restore to Inbox">
-                <IconButton size="small" onClick={(e) => handleRestoreClick(e, conversation.id)}>
-                  <Restore fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              onRestore && (
+                <Tooltip title="Restore to Inbox">
+                  <IconButton size="small" onClick={(e) => handleActionClick(e, onRestore)}>
+                    <Restore fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )
             )}
           </Box>
         )}
