@@ -1,8 +1,8 @@
 import {
   ArrowBack,
-  AttachFile, Call, Close, Info, InsertEmoticon,
+  AttachFile, Call, Close, FormatBold, FormatItalic, FormatUnderlined, GTranslate, Info, InsertEmoticon,
   MoreVert,
-  NightsStay, Search, Send, SmartToy, Videocam
+  NightsStay, Search, Send, SmartToy, Spellcheck, ThumbUp, Videocam
 } from '@mui/icons-material';
 import {
   AppBar,
@@ -48,6 +48,9 @@ export default function ConversationView({
   const [selectedText, setSelectedText] = useState('');
   const [showCopilotButton, setShowCopilotButton] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
+  const [showFormattingButtons, setShowFormattingButtons] = useState(false);
+  const [formattingPosition, setFormattingPosition] = useState({ top: 0, left: 0 });
+  const [inputSelection, setInputSelection] = useState({ start: 0, end: 0 });
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const conversationRef = useRef(null);
@@ -78,6 +81,76 @@ export default function ConversationView({
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
   }, [conversation]);
+
+  const handleInputSelection = () => {
+    const input = inputRef.current;
+    if (input) {
+      const { selectionStart, selectionEnd } = input;
+      if (selectionStart !== selectionEnd) {
+        const selectedText = message.substring(selectionStart, selectionEnd);
+        if (selectedText.trim()) {
+          const rect = input.getBoundingClientRect();
+          const lineHeight = parseInt(window.getComputedStyle(input).lineHeight);
+          const linesBefore = message.substr(0, selectionStart).split('\n').length - 1;
+          
+          setInputSelection({ start: selectionStart, end: selectionEnd });
+          setFormattingPosition({
+            top: rect.top + (linesBefore * lineHeight) - 40,
+            left: rect.left + 20
+          });
+          setShowFormattingButtons(true);
+          return;
+        }
+      }
+    }
+    setShowFormattingButtons(false);
+  };
+
+  const applyFormatting = (format) => {
+    if (inputSelection.start === inputSelection.end) return;
+    
+    const { start, end } = inputSelection;
+    const selectedText = message.substring(start, end);
+    let formattedText = '';
+    
+    switch (format) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        formattedText = `*${selectedText}*`;
+        break;
+      case 'underline':
+        formattedText = `__${selectedText}__`;
+        break;
+      case 'fixGrammar':
+        formattedText = `[grammarfix]${selectedText}[/grammarfix]`;
+        break;
+      case 'translate':
+        formattedText = `[translate]${selectedText}[/translate]`;
+        break;
+      case 'formal':
+        formattedText = `[formal]${selectedText}[/formal]`;
+        break;
+      case 'friendly':
+        formattedText = `[friendly]${selectedText}[/friendly]`;
+        break;
+      default:
+        formattedText = selectedText;
+    }
+    
+    const newMessage = message.substring(0, start) + formattedText + message.substring(end);
+    setMessage(newMessage);
+    setShowFormattingButtons(false);
+    
+    // Restore cursor position after a small delay
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(start + 2, start + 2 + selectedText.length);
+      }
+    }, 0);
+  };
 
   const handleAskCopilot = () => {
     if (selectedText && onAskFinCopilot) {
@@ -140,6 +213,7 @@ export default function ConversationView({
     if (message.trim() === '') return;
     onSendMessage(conversation.id, message);
     setMessage('');
+    setShowFormattingButtons(false);
   };
 
   const toggleBedtimeMode = () => {
@@ -186,6 +260,57 @@ export default function ConversationView({
         >
           Ask Fin Copilot
         </Button>
+      )}
+
+      {showFormattingButtons && (
+        <Paper
+          elevation={3}
+          sx={{
+            position: 'fixed',
+            top: `${formattingPosition.top}px`,
+            left: `${formattingPosition.left}px`,
+            zIndex: 9999,
+            display: 'flex',
+            p: 0.5,
+            bgcolor: bedtimeMode ? 'rgba(50, 50, 50, 0.9)' : 'background.paper'
+          }}
+        >
+          <Tooltip title="Bold">
+            <IconButton size="small" onClick={() => applyFormatting('bold')}>
+              <FormatBold fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Italic">
+            <IconButton size="small" onClick={() => applyFormatting('italic')}>
+              <FormatItalic fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Underline">
+            <IconButton size="small" onClick={() => applyFormatting('underline')}>
+              <FormatUnderlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Fix Grammar">
+            <IconButton size="small" onClick={() => applyFormatting('fixGrammar')}>
+              <Spellcheck fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Translate">
+            <IconButton size="small" onClick={() => applyFormatting('translate')}>
+              <GTranslate fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="More Formal">
+            <IconButton size="small" onClick={() => applyFormatting('formal')}>
+              <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Formal</Typography>
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="More Friendly">
+            <IconButton size="small" onClick={() => applyFormatting('friendly')}>
+              <ThumbUp fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Paper>
       )}
 
       <AppBar
@@ -469,6 +594,7 @@ export default function ConversationView({
               placeholder="Type a message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onSelect={handleInputSelection}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
