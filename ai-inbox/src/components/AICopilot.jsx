@@ -1,9 +1,9 @@
 import {
-  Help, History, Lightbulb, Psychology, Send, SentimentDissatisfied,
+  ContentCopy, Help, History, Lightbulb, Psychology, Send, SentimentDissatisfied,
   SentimentSatisfied, SentimentVeryDissatisfied, SentimentVerySatisfied, SmartToy
 } from '@mui/icons-material';
 import {
-  Avatar, Badge, Box, Button, Chip, Divider, IconButton, LinearProgress, List,
+  Avatar, Badge, Box, Button, Chip, Divider, IconButton, keyframes, LinearProgress, List,
   ListItem,
   ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography
 } from '@mui/material';
@@ -19,7 +19,13 @@ const sentimentIcons = {
   mixed: <SentimentDissatisfied color="warning" />
 };
 
-export default function AICopilot({ conversationId, initialQuery }) {
+const bounce = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+`;
+
+export default function AICopilot({ conversationId, initialQuery, onCopyToChat }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -31,6 +37,7 @@ export default function AICopilot({ conversationId, initialQuery }) {
   useEffect(() => {
     if (initialQuery) {
       setInput(initialQuery);
+      handleSend(initialQuery);
     }
   }, [initialQuery]);
 
@@ -66,16 +73,17 @@ export default function AICopilot({ conversationId, initialQuery }) {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
-    if (input.trim() === '') return;
+  const handleSend = (prefilledMessage) => {
+    const messageToSend = prefilledMessage || input;
+    if (messageToSend.trim() === '') return;
     
-    const userMessage = { text: input, sender: 'user' };
+    const userMessage = { text: messageToSend, sender: 'user' };
     setMessages([...messages, userMessage]);
-    setInput('');
+    if (!prefilledMessage) setInput('');
     setIsLoading(true);
     
     setTimeout(() => {
-      const aiResponse = generateAIResponse(input);
+      const aiResponse = generateAIResponse(messageToSend);
       setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
     }, 1200);
@@ -111,21 +119,14 @@ export default function AICopilot({ conversationId, initialQuery }) {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setMessages([...messages, {
-      text: suggestion,
-      sender: 'user'
-    }]);
-    setInput('');
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        text: `Great choice! Here's more detail about that suggestion...`,
-        sender: 'ai',
-        type: 'followup'
-      }]);
-      setIsLoading(false);
-    }, 1000);
+    handleSend(suggestion);
+  };
+
+  const handleCopyToChat = (text) => {
+    if (onCopyToChat) {
+      const cleanedText = text.replace(/```[\s\S]*?\n/g, '').replace(/```/g, '');
+      onCopyToChat(cleanedText);
+    }
   };
 
   const renderMessageContent = (message) => {
@@ -195,41 +196,73 @@ export default function AICopilot({ conversationId, initialQuery }) {
         
         <List sx={{ pb: 0 }}>
           {messages.map((msg, index) => (
-            <ListItem 
-              key={index} 
-              sx={{ 
-                justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                px: 0,
-                alignItems: 'flex-start'
-              }}
-            >
-              {msg.sender === 'ai' && (
-                <Avatar sx={{ 
-                  bgcolor: 'primary.main', 
-                  mr: 1, 
-                  width: 32, 
-                  height: 32,
-                  mt: '3px'
-                }}>
-                  <SmartToy fontSize="small" />
-                </Avatar>
-              )}
-              <Paper 
-                elevation={1} 
+            <Box key={index}>
+              <ListItem 
                 sx={{ 
-                  p: 2, 
-                  bgcolor: msg.sender === 'user' ? 'primary.light' : 'background.paper',
-                  color: msg.sender === 'user' ? 'primary.contrastText' : 'text.primary',
-                  borderRadius: msg.sender === 'user' 
-                    ? '18px 18px 0 18px' 
-                    : '18px 18px 18px 0',
-                  maxWidth: '90%',
-                  overflow: 'hidden'
+                  justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                  px: 0,
+                  alignItems: 'flex-start'
                 }}
               >
-                {renderMessageContent(msg)}
-              </Paper>
-            </ListItem>
+                {msg.sender === 'ai' && (
+                  <Avatar sx={{ 
+                    bgcolor: 'primary.main', 
+                    mr: 1, 
+                    width: 32, 
+                    height: 32,
+                    mt: '3px'
+                  }}>
+                    <SmartToy fontSize="small" />
+                  </Avatar>
+                )}
+                <Paper 
+                  elevation={1} 
+                  sx={{ 
+                    p: 2, 
+                    bgcolor: msg.sender === 'user' ? 'primary.light' : 'background.paper',
+                    color: msg.sender === 'user' ? 'primary.contrastText' : 'text.primary',
+                    borderRadius: msg.sender === 'user' 
+                      ? '18px 18px 0 18px' 
+                      : '18px 18px 18px 0',
+                    maxWidth: '90%',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {renderMessageContent(msg)}
+                </Paper>
+              </ListItem>
+              
+              {msg.sender === 'ai' && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'flex-start',
+                  pl: 6,
+                  mt: -1,
+                  mb: 2
+                }}>
+                  <Button
+                    size="small"
+                    startIcon={<ContentCopy fontSize="small" />}
+                    onClick={() => handleCopyToChat(msg.text)}
+                    disabled={!conversationId}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      color: 'text.secondary',
+                      '&:hover': {
+                        color: 'primary.main',
+                        bgcolor: 'transparent',
+                        animation: `${bounce} 0.5s ease`,
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Copy to Chat
+                  </Button>
+                </Box>
+              )}
+            </Box>
           ))}
           <div ref={messagesEndRef} />
         </List>
@@ -246,26 +279,57 @@ export default function AICopilot({ conversationId, initialQuery }) {
             <Box sx={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.5
+              gap: 2
             }}>
               {suggestions.map((suggestion, index) => (
-                <Paper
-                  key={index}
-                  elevation={2}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: 'action.hover',
-                      transform: 'translateY(-2px)'
-                    }
-                  }}
-                >
-                  <Typography variant="body2">{suggestion}</Typography>
-                </Paper>
+                <Box key={index} sx={{ mb: 2 }}>
+                  <Paper
+                    elevation={2}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 3
+                      }
+                    }}
+                  >
+                    <Typography variant="body2">{suggestion}</Typography>
+                  </Paper>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end',
+                    mt: 0.5
+                  }}>
+                    <Button
+                      size="small"
+                      startIcon={<ContentCopy fontSize="small" />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyToChat(suggestion);
+                      }}
+                      disabled={!conversationId}
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                        '&:hover': {
+                          color: 'primary.main',
+                          bgcolor: 'transparent',
+                          animation: `${bounce} 0.5s ease`,
+                          transform: 'translateY(-2px)'
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      Copy to Chat
+                    </Button>
+                  </Box>
+                </Box>
               ))}
             </Box>
           </>
@@ -329,7 +393,7 @@ export default function AICopilot({ conversationId, initialQuery }) {
           <Button 
             variant="contained" 
             color="primary" 
-            onClick={handleSend}
+            onClick={() => handleSend()}
             sx={{ ml: 1 }}
             disabled={!conversationId || !input.trim()}
           >

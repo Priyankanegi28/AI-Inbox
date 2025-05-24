@@ -23,8 +23,9 @@ export default function App() {
   );
   const [darkMode, setDarkMode] = useState(false);
   const [activeInbox, setActiveInbox] = useState('all');
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('list');
   const [copilotQuery, setCopilotQuery] = useState('');
+  const [copilotTextToCopy, setCopilotTextToCopy] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -139,6 +140,14 @@ export default function App() {
     setCopilotQuery(selectedText);
   };
 
+  const handleCopyToChat = (text) => {
+    setCopilotTextToCopy(text);
+  };
+
+  const clearCopilotText = () => {
+    setCopilotTextToCopy('');
+  };
+
   const sortedConversations = useMemo(() => {
     return [...filteredConversations].sort((a, b) => {
       if (a.starred !== b.starred) return a.starred ? -1 : 1;
@@ -209,7 +218,6 @@ export default function App() {
             viewMode={viewMode}
           />
 
-          {/* View Toggle Buttons - Bottom Left Corner */}
           <Box sx={{
             position: 'absolute',
             bottom: 16,
@@ -261,6 +269,8 @@ export default function App() {
               onSendMessage={handleSendMessage}
               isMobile={isMobile}
               onAskFinCopilot={handleAskFinCopilot}
+              copilotTextToCopy={copilotTextToCopy}
+              clearCopilotText={clearCopilotText}
             />
           </Box>
         )}
@@ -273,6 +283,7 @@ export default function App() {
             <AICopilot 
               conversationId={selectedConversationId}
               initialQuery={copilotQuery}
+              onCopyToChat={handleCopyToChat}
             />
           </Box>
         )}

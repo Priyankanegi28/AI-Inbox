@@ -39,7 +39,9 @@ export default function ConversationView({
   onBack,
   onSendMessage,
   isMobile,
-  onAskFinCopilot
+  onAskFinCopilot,
+  copilotTextToCopy,
+  clearCopilotText
 }) {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -57,6 +59,14 @@ export default function ConversationView({
   const open = Boolean(anchorEl);
 
   const avatarColor = conversation ? stringToColor(conversation.name) : 'primary.main';
+
+  useEffect(() => {
+    if (copilotTextToCopy && inputRef.current) {
+      setMessage(copilotTextToCopy);
+      inputRef.current.focus();
+      clearCopilotText();
+    }
+  }, [copilotTextToCopy, clearCopilotText]);
 
   useEffect(() => {
     const handleSelectionChange = () => {
@@ -143,7 +153,6 @@ export default function ConversationView({
     setMessage(newMessage);
     setShowFormattingButtons(false);
     
-    // Restore cursor position after a small delay
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();

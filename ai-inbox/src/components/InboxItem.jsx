@@ -24,7 +24,7 @@ const priorityColors = {
   low: 'success'
 };
 
-// Helper function to generate a color from a string
+
 const stringToColor = (string) => {
   let hash = 0;
   for (let i = 0; i < string.length; i++) {
@@ -114,7 +114,7 @@ export default function InboxItem({
             width: 32, 
             height: 32,
             fontSize: '0.875rem',
-            color: '#fff' // Ensure text is readable on the background
+            color: '#fff'
           }}
         >
           {conversation.name.charAt(0).toUpperCase()}

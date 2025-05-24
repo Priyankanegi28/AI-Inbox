@@ -3,7 +3,6 @@ body {
   font-family: 'Roboto', sans-serif;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -28,7 +27,7 @@ body {
   background-color: #000000 !important;
   color: #ffffff !important;
 }
-/* Force button colors in dark mode */
+
 [data-mui-color-scheme="dark"] .MuiButton-outlined:not(.InboxSelectorButton) {
   color: white !important;
   border-color: white !important;
@@ -39,7 +38,6 @@ body {
   color: black !important;
 }
 
-/* Force button colors in light mode */
 [data-mui-color-scheme="light"] .MuiButton-outlined:not(.InboxSelectorButton) {
   color: black !important;
   border-color: black !important;

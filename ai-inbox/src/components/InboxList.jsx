@@ -28,7 +28,7 @@ export default function InboxList({
 
   const handleSortChange = (type) => {
     setSortBy(type);
-    handleClose(); // Close menu when an item is selected
+    handleClose();
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -87,7 +87,7 @@ export default function InboxList({
         <Menu
           anchorEl={anchorEl}
           open={open}
-          onClose={handleClose} // Auto-close when clicking outside
+          onClose={handleClose}
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'right',

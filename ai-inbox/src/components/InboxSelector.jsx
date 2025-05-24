@@ -7,13 +7,13 @@ const InboxButton = styled(Button)(({ theme, ownerState }) => {
   
   return {
     color: isActive 
-      ? isDark ? '#000000' : '#ffffff'  // Active text: black in dark, white in light
-      : isDark ? '#ffffff' : '#000000', // Inactive text: white in dark, black in light
+      ? isDark ? '#000000' : '#ffffff'
+      : isDark ? '#ffffff' : '#000000',
       
     borderColor: isDark ? '#ffffff' : '#000000',
     
     backgroundColor: isActive 
-      ? isDark ? '#ffffff' : '#000000'  // Active bg: white in dark, black in light
+      ? isDark ? '#ffffff' : '#000000'
       : 'transparent',
     
     '&:hover': {
@@ -30,9 +30,8 @@ const InboxButton = styled(Button)(({ theme, ownerState }) => {
       }
     },
     
-    // Force override any default theme colors
     '&.MuiButton-root': {
-      minWidth: '80px', // Optional: Set minimum width for consistency
+      minWidth: '80px',
     }
   };
 });

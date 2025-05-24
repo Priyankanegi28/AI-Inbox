@@ -2,7 +2,6 @@ import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import { Avatar, Box, Paper, Typography } from '@mui/material';
 import { formatDistanceToNowStrict } from 'date-fns';
 
-// Generate consistent color from a string
 const stringToColor = (string) => {
   let hash = 0;
   for (let i = 0; i < string.length; i++) {
@@ -16,7 +15,6 @@ const stringToColor = (string) => {
   return color;
 };
 
-// Convert "minutes" to "min", "hours" to "hr", etc.
 const abbreviateTime = (str) => {
   return str
     .replace(' seconds', ' sec')
