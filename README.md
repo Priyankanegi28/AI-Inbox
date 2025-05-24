@@ -1,6 +1,6 @@
 # AI-Inbox: Smart Email Client with AI Copilot
 
-![AI-Inbox Screenshot](inbox.png) 
+![AI-Inbox Screenshot](https://github.com/Priyankanegi28/AI-Inbox/blob/main/ai-inbox/public/inbox.png) 
 
 [Live Demo](https://priyankanegi28.github.io/AI-Inbox/)
 
