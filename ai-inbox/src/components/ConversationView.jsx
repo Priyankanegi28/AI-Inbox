@@ -1,23 +1,42 @@
 import {
   ArrowBack,
-  AttachFile, Call, Close, FormatBold, FormatItalic, FormatUnderlined, GTranslate, Info, InsertEmoticon,
+  AttachFile,
+  Call,
+  Close,
+  FormatBold,
+  FormatItalic,
+  FormatUnderlined,
+  GTranslate,
+  Info,
+  InsertEmoticon,
   MoreVert,
-  NightsStay, Search, Send, SmartToy, Spellcheck, ThumbUp, Videocam
+  NightsStay,
+  Search,
+  Send,
+  SmartToy,
+  Spellcheck,
+  ThumbUp,
+  Videocam
 } from '@mui/icons-material';
 import {
   AppBar,
   Avatar,
   Box,
   Button,
-  IconButton, ListItemIcon,
-  ListItemText, Menu,
-  MenuItem, Paper,
-  Stack,
-  TextField,
+  Chip,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
+  Popover,
+  Stack, styled, TextField,
   Toolbar,
   Tooltip,
   Typography
 } from '@mui/material';
+import EmojiPicker from 'emoji-picker-react';
 import { useEffect, useRef, useState } from 'react';
 import MessageItem from './MessageItem';
 
@@ -33,6 +52,18 @@ const stringToColor = (string) => {
   }
   return color;
 };
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
 export default function ConversationView({
   conversation,
@@ -53,10 +84,14 @@ export default function ConversationView({
   const [showFormattingButtons, setShowFormattingButtons] = useState(false);
   const [formattingPosition, setFormattingPosition] = useState({ top: 0, left: 0 });
   const [inputSelection, setInputSelection] = useState({ start: 0, end: 0 });
+  const [emojiAnchorEl, setEmojiAnchorEl] = useState(null);
+  const [files, setFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const conversationRef = useRef(null);
+  const fileInputRef = useRef(null);
   const open = Boolean(anchorEl);
+  const openEmojiPicker = Boolean(emojiAnchorEl);
 
   const avatarColor = conversation ? stringToColor(conversation.name) : 'primary.main';
 
@@ -197,6 +232,33 @@ export default function ConversationView({
     console.log('Conversation info');
   };
 
+  const handleEmojiClick = (emojiData) => {
+    setMessage(prev => prev + emojiData.emoji);
+    setEmojiAnchorEl(null);
+    inputRef.current.focus();
+  };
+
+  const handleOpenEmojiPicker = (event) => {
+    setEmojiAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseEmojiPicker = () => {
+    setEmojiAnchorEl(null);
+  };
+
+  const handleFileChange = (event) => {
+    const selectedFiles = Array.from(event.target.files);
+    setFiles(prev => [...prev, ...selectedFiles]);
+    
+    // Add file names to message
+    const fileNames = selectedFiles.map(file => file.name).join(', ');
+    setMessage(prev => prev + (prev ? '\n' : '') + `[Attached: ${fileNames}]`);
+  };
+
+  const handleAttachFileClick = () => {
+    fileInputRef.current.click();
+  };
+
   useEffect(() => {
     if (conversation) {
       const timer = setTimeout(() => {
@@ -219,10 +281,22 @@ export default function ConversationView({
   }, [conversation?.messages]);
 
   const handleSend = () => {
-    if (message.trim() === '') return;
-    onSendMessage(conversation.id, message);
+    if (message.trim() === '' && files.length === 0) return;
+    
+    const messageToSend = {
+      text: message,
+      files: [...files]
+    };
+    
+    onSendMessage(conversation.id, messageToSend);
     setMessage('');
+    setFiles([]);
     setShowFormattingButtons(false);
+    
+    // Clear file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const toggleBedtimeMode = () => {
@@ -247,6 +321,14 @@ export default function ConversationView({
         position: 'relative'
       }}
     >
+      {/* Hidden file input */}
+      <VisuallyHiddenInput 
+        type="file" 
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        multiple
+      />
+
       {showCopilotButton && (
         <Button
           variant="contained"
@@ -578,25 +660,79 @@ export default function ConversationView({
             bgcolor: bedtimeMode ? 'rgba(0, 0, 0, 0.8)' : 'background.paper'
           }}
         >
+          {/* Display attached files */}
+          {files.length > 0 && (
+            <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {files.map((file, index) => (
+                <Chip
+                  key={index}
+                  label={file.name}
+                  onDelete={() => {
+                    setFiles(files.filter((_, i) => i !== index));
+                  }}
+                  sx={{
+                    maxWidth: 200,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+
           <Box display="flex" alignItems="flex-end">
             <Tooltip title="Attach file">
               <IconButton 
                 size="small" 
                 sx={{ mr: 1 }}
                 color={bedtimeMode ? "inherit" : "default"}
+                onClick={handleAttachFileClick}
               >
                 <AttachFile />
               </IconButton>
             </Tooltip>
+            
             <Tooltip title="Insert emoji">
               <IconButton 
                 size="small" 
                 sx={{ mr: 1 }}
                 color={bedtimeMode ? "inherit" : "default"}
+                onClick={handleOpenEmojiPicker}
               >
                 <InsertEmoticon />
               </IconButton>
             </Tooltip>
+
+            <Popover
+              open={openEmojiPicker}
+              anchorEl={emojiAnchorEl}
+              onClose={handleCloseEmojiPicker}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+              }}
+              transformOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              sx={{
+                '& .EmojiPickerReact': {
+                  backgroundColor: bedtimeMode ? '#424242' : '#fff',
+                  boxShadow: 'none'
+                }
+              }}
+            >
+              <EmojiPicker 
+                onEmojiClick={handleEmojiClick}
+                width={300}
+                height={400}
+                skinTonesDisabled
+                searchDisabled={isMobile}
+                previewConfig={{ showPreview: false }}
+                theme={bedtimeMode ? 'dark' : 'light'}
+              />
+            </Popover>
+
             <TextField
               fullWidth
               variant="outlined"
@@ -636,7 +772,7 @@ export default function ConversationView({
                 height: 40,
                 bgcolor: bedtimeMode ? 'rgba(25, 118, 210, 0.8)' : 'primary.main'
               }}
-              disabled={!message.trim()}
+              disabled={!message.trim() && files.length === 0}
             >
               <Send />
             </Button>

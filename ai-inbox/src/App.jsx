@@ -1,6 +1,6 @@
 import { Brightness4, Brightness7, ViewList, ViewModule } from '@mui/icons-material';
 import {
-  Box, Button, ButtonGroup, createTheme, CssBaseline, IconButton,
+  Badge, Box, Button, ButtonGroup, createTheme, CssBaseline, IconButton,
   ThemeProvider, Tooltip, useMediaQuery, useTheme
 } from '@mui/material';
 import { useMemo, useState } from 'react';
@@ -39,6 +39,13 @@ export default function App() {
         secondary: {
           main: '#9c27b0',
         },
+        background: {
+          default: darkMode ? '#121212' : '#f5f5f5',
+          paper: darkMode ? '#1e1e1e' : '#ffffff',
+        }
+      },
+      typography: {
+        fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       },
     }),
     [darkMode]
@@ -58,6 +65,10 @@ export default function App() {
     });
   }, [conversations, activeInbox]);
 
+  const unreadCount = useMemo(() => {
+    return filteredConversations.reduce((count, conv) => count + (conv.unread ? 1 : 0), 0);
+  }, [filteredConversations]);
+
   const handleSelectConversation = (id) => {
     setSelectedConversationId(id);
     setConversations(prev =>
@@ -67,11 +78,16 @@ export default function App() {
     );
   };
 
-  const handleSendMessage = (conversationId, text) => {
+  const handleSendMessage = (conversationId, { text, files = [] }) => {
     const newMessage = {
       id: Date.now().toString(),
       sender: 'You',
       text,
+      files: files.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size
+      })),
       timestamp: new Date(),
       isUser: true
     };
@@ -176,14 +192,18 @@ export default function App() {
             justifyContent: 'space-between',
             alignItems: 'center',
             p: 1,
-            bgcolor: 'background.paper'
+            bgcolor: 'background.paper',
+            borderBottom: '1px solid',
+            borderColor: 'divider'
           }}>
             <ButtonGroup size="small" variant="outlined">
               <Button 
                 onClick={() => setActiveInbox('all')}
                 variant={activeInbox === 'all' ? 'contained' : 'outlined'}
               >
-                All
+                <Badge badgeContent={unreadCount} color="primary" sx={{ mr: 1 }}>
+                  All
+                </Badge>
               </Button>
               <Button 
                 onClick={() => setActiveInbox('archived')}
@@ -223,7 +243,7 @@ export default function App() {
             bottom: 16,
             left: 16,
             zIndex: 1,
-            bgcolor: 'common.white',
+            bgcolor: 'background.paper',
             borderRadius: 1,
             boxShadow: 2
           }}>
@@ -232,9 +252,9 @@ export default function App() {
                 <IconButton 
                   onClick={() => setViewMode('list')}
                   sx={{ 
-                    color: viewMode === 'list' ? 'common.black' : 'grey.500',
+                    color: viewMode === 'list' ? 'primary.main' : 'text.secondary',
                     '&:hover': {
-                      bgcolor: 'grey.300'
+                      bgcolor: 'action.hover'
                     }
                   }}
                 >
@@ -245,9 +265,9 @@ export default function App() {
                 <IconButton 
                   onClick={() => setViewMode('grid')}
                   sx={{ 
-                    color: viewMode === 'grid' ? 'common.black' : 'grey.500',
+                    color: viewMode === 'grid' ? 'primary.main' : 'text.secondary',
                     '&:hover': {
-                      bgcolor: 'grey.300'
+                      bgcolor: 'action.hover'
                     }
                   }}
                 >
